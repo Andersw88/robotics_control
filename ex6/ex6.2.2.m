@@ -34,8 +34,8 @@ for j = 1:5
     t = 0:p1.dt:p1.tau;
     p1.end = x1(end,1)+offset(1);
     p2.end = x2(end,1)+offset(2);
-%     p2.scale = (p2.start - x2(end,1))/(p2.start - x2(end,1)+offset(1)); %Improvised to keep the size of the motion similar.
-%     p2.scale = (p2.start - x2(end,1))/(p2.start - x2(end,1)+offset(2));
+    p1.scale = (p1.start - x1(end,1))/(p1.start - x1(end,1)+offset(1)); %Improvised to keep the size of the motion similar.
+    p2.scale = (p2.start - x2(end,1))/(p2.start - x2(end,1)+offset(2));
     y1 = x1(1,1:3)';
     y2 = x2(1,1:3)';
     yt = zeros(length(t),2);
@@ -65,19 +65,25 @@ for j = 1:5
     end
 
     figure(2);
-    subplot(2,2,1)
-    plot(letter.t,x1(:,1)); hold on;
+    subplot(3,2,1)
     plot(t,yt(:,1)); hold on;
-    subplot(2,2,3)
-    plot(letter.t,x2(:,1)); hold on;
+    subplot(3,2,3)
     plot(t,yt(:,2)); hold on;
-    subplot(2,2,[2,4])
-    plot(x1(:,1),x2(:,1)); hold on;
+    subplot(3,2,[2,4,6])
     plot(yt(:,1),yt(:,2)); hold on;
-    axis square
+    axis equal
+    subplot(3,2,5)
+    plot(t,error); hold on;
+    legend('error');
 end
 
-
+figure(2);
+subplot(3,2,1)
+plot(letter.t,x1(:,1)); hold on;
+subplot(3,2,3)
+plot(letter.t,x2(:,1)); hold on;
+subplot(3,2,[2,4,6])
+plot(x1(:,1),x2(:,1)); hold on;
 
 
 

@@ -118,7 +118,7 @@ end
 %Augment the controller with an integrator – do you notice a sizable performance improvement?
 %The force takes longer to settle after the initial errors when it hit the plane.
 
-skip = 100;
+skip = 50;
 figure(2);
 subplot(3,1,1);
 plot(t(skip:end),sqErrors(skip:end,:)); 

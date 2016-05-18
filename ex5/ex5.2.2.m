@@ -7,9 +7,8 @@ load('traj.mat')
 SV = System_Variables(SP);
 
 SV.q = traj.q_i;
-
 SV = calc_pos(SP,SV); 
-Je = zeros(6,SP.n);
+% Je = zeros(6,SP.n);
 
 pE = fk_e(SP,SV,SP.bN,SP.bP);
 
@@ -19,21 +18,17 @@ t = (0:size(traj.p_d,2)-1)*d_time;
 
 A = [0,1;0,0];
 B = [0;1];
-P = [-2,-1];
+P = [-10,-6];
 pd = place(A,B,P)
-
-% pd= [repmat([5,5],3,1);repmat([1,1],3,1)];
-% pd = K(1)
-
 
 visualizer=MBSVisualizer(SP,SV);
 
-% pe = zeros(6,1);
-% pPos = zeros(3,1);
-% G = zeros(6,1);
 e = zeros(6,1);
 ev = zeros(6,1);
 sqErrors = zeros(length(t),3);
+
+Je = calc_Je(SP,SV,SP.bN,SP.bP);
+JeInv = inv(Je);
 
 for i = 1:size(traj.p_d,2)
     
@@ -52,16 +47,16 @@ for i = 1:size(traj.p_d,2)
     e(4:6) = R_err(RE, traj.R_d(:,(1+(i-1)*3):((1+(i-1)*3)+2)));
     ev = [traj.dp_d(:,i) - v(1:3);  traj.w_d(:,i) - SV.L(SP.bN).w];
     
-%     SV.tau = inv(Je)* (pd(:,1).*e  + pd(:,2).*ev) + G(7:end);
-    SV.tau = pd(:,1).*Je*e  + pd(:,2).*Je*ev + G(7:end);
+    SV.tau = JeInv*(pd(:,1).*e + pd(:,2).*ev) + G(7:end);
+%     SV.tau = pd(:,1).*Je*e  + pd(:,2).*Je*ev + G(7:end);
     sqErrors(i,:) = sum(e(1:3).^2);
 
     
     SV = int_rk4(SP,SV,d_time,Gravity);
 
-%     if mod(i,10) == 0
+    if mod(i,10) == 0
         visualizer.update(SP,SV);
-%     end
+    end
 
 end
 

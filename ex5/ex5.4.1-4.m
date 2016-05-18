@@ -11,7 +11,8 @@ SV = System_Variables(SP);
 
 R_v=ry(pi/4);
 rotd = R_v*[0,0,1;0,1,0;1,0,0];
-[q, iter] = ik_e(SP,SV,SP.bN,SP.bP,inv(SP.bR),rotd*[-0.02,0,0]',rotd);
+startPos = rotd*[-0.02,0,0]';
+[q, iter] = ik_e(SP,SV,SP.bN,SP.bP,inv(SP.bR),startPos,rotd);
 SV.q = q;
 SV = calc_pos(SP,SV); %need to call calc_pos for the visualizer
 
@@ -28,7 +29,8 @@ r = 0.1;
 fK = 5000; %fC^2/4 
 fC = sqrt(fK*4); %150 If i use params from enviromnet it ends up exactly at 10N
 force_d = 10%N
-x = R_v*[ones(size(t))*force_d/fK;cos(t*tx)*r;sin(t*tx)*r];
+x = bsxfun(@plus,R_v*[ones(size(t))*force_d/fK;cos(t*tx)*r;sin(t*tx)*r],startPos - r*[0,1,0]');
+% x = R_v*[ones(size(t))*force_d/fK;cos(t*tx)*r;sin(t*tx)*r];
 dx = R_v*[zeros(size(t));-tx*sin(t*tx);tx*cos(t*tx)]*r;
 ddx = R_v*[zeros(size(t));-tx^2*cos(t*tx);-tx^2*sin(t*tx)]*r;
 w = zeros(size(x));
@@ -67,7 +69,7 @@ for i=1:length(t)
     N = r_ne(SP,SV,gravity); N=N(7:end);
     
     [f_v df_v]=getContactForce(environment,pE,v(1:3),dt); 
-%     tau_ext=Je(1:3,:)'*f_v;
+    tau_ext=Je(1:3,:)'*f_v;
 
     if t(i) > 5
        environment.k_e_ = 0;
@@ -96,12 +98,12 @@ for i=1:length(t)
         force_control = 0;
     end
 
-    SV.tau = H*inv(Je)*([ddx(:,i);dw(:,i)] + [e,ev]*pd - dJe*SV.dq) + N + force_control;% + tau_ext;
+    SV.tau = H*inv(Je)*([ddx(:,i);dw(:,i)] + [e,ev]*pd - dJe*SV.dq) + N + force_control + tau_ext;
     
     sqErrors(i,:) = sum(e(1:3).^2);
     orientationError(i) = sum(e(4:6).^2);
     forceError(i) = norm(f_v);
-    SV = int_rk4(SP,SV,dt,gravity + f_v); %call forward dynamics and integrate
+    SV = int_rk4(SP,SV,dt,gravity); %call forward dynamics and integrate
     
     if mod(i,10) == 0
         visualizer.update(SP,SV);% update the visualization (needs calc_pos to be called before, which happens in int_rk4 in this example)

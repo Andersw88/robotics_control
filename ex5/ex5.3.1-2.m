@@ -13,7 +13,7 @@ SV = System_Variables(SP);
 R_v=ry(pi/4);
 rotd = R_v*[0,0,1;0,1,0;1,0,0];
 startPos = rotd*[-0.02,0,0]';
-[q, iter] = ik_e(SP,SV,SP.bN,SP.bP,inv(SP.bR),rotd*[-0.02,0,0]',rotd);
+[q, iter] = ik_e(SP,SV,SP.bN,SP.bP,inv(SP.bR),startPos,rotd);
 SV.q = q;
 SV = calc_pos(SP,SV); %need to call calc_pos for the visualizer
 
@@ -74,7 +74,7 @@ for i=1:length(t)
     N = r_ne(SP,SV,gravity); N=N(7:end);
     
     [f_v df_v]=getContactForce(environment,pE,v(1:3),dt); 
-    tau_ext=Je(1:3,:)'*f_v
+    tau_ext=Je(1:3,:)'*f_v;
     
 %     if t(i) > 5
 %        environment.k_e_ = 0;
@@ -99,7 +99,7 @@ for i=1:length(t)
     ev(1:3) = R_v(1)*ev(1:3);
     
     
-    SV.tau = H*inv(Je)*([ddx(:,i);0;0;0] + [e,ev]*pd - dJe*SV.dq) + force_control + N + tau_ext - Je(1:3,:)'*f_v
+    SV.tau = H*inv(Je)*([ddx(:,i);0;0;0] + [e,ev]*pd - dJe*SV.dq) + force_control + N + tau_ext;
   
     sqErrors(i) = sum(e(1:3).^2);
     orientationError(i) = sum(e(4:6).^2);

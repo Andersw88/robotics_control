@@ -12,7 +12,8 @@ SV = System_Variables(SP);
 
 R_v=ry(pi/4);
 rotd = R_v*[0,0,1;0,1,0;1,0,0];
-[q, iter] = ik_e(SP,SV,SP.bN,SP.bP,inv(SP.bR),rotd*[-0.02,0,0]',rotd);
+startPos = rotd*[-0.02,0,0]';
+[q, iter] = ik_e(SP,SV,SP.bN,SP.bP,inv(SP.bR),startPos,rotd);
 SV.q = q;
 SV = calc_pos(SP,SV); %need to call calc_pos for the visualizer
 
@@ -30,7 +31,8 @@ environment=Environment([R_v v; zeros(1,3) 1]); %environment is instantiated wit
 t=0:dt:tf;
 tx = 1;
 r = 0.1;
-x = R_v*[zeros(size(t));cos(t*tx);sin(t*tx)]*r;
+x = bsxfun(@plus,R_v*[zeros(size(t));cos(t*tx)*r;sin(t*tx)*r],startPos - r*[0,1,0]');
+% x = R_v*[zeros(size(t));cos(t*tx);sin(t*tx)]*r;
 dx = R_v*[zeros(size(t));-tx*sin(t*tx);tx*cos(t*tx)]*r;
 ddx = R_v*[zeros(size(t));-tx^2*cos(t*tx);-tx^2*sin(t*tx)]*r;
 rf = - R_v * [10-exp(-t);zeros(size(t));zeros(size(t))];

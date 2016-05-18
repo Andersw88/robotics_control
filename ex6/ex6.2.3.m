@@ -32,7 +32,7 @@ p2.tau = p1.tau;
 t = 0:p1.dt:p1.tau;
 p1.end = x1(end,1)+offset(1);
 p2.end = x2(end,1)+offset(2);
-p2.scale = (p2.start - x2(end,1))/(p2.start - x2(end,1)+offset(1)); %Improvised to keep the size of the motion similar.
+p1.scale = (p1.start - x1(end,1))/(p1.start - x1(end,1)+offset(1)); %Improvised to keep the size of the motion similar.
 p2.scale = (p2.start - x2(end,1))/(p2.start - x2(end,1)+offset(2));
 
 y1 = x1(1,1:3)';

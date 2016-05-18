@@ -1,0 +1,100 @@
+
+clear all; close all; clc;
+format short
+
+
+SP = model_ABB;
+SV = System_Variables(SP);
+SV.q = ones(6,1)*-pi/5;
+[q, iter] = ik_e(SP,SV,SP.bN,SP.bP,inv(SP.bR),[0,0,0]');
+% SV.q = ones(6,1).*rand(6,1)*10;
+SV.q = q;
+SV = calc_pos(SP,SV);
+
+n1 = [0;1/sqrt(2);1/sqrt(2)];
+n2 = [0;0;1];
+a = -[0.3,0.25];
+tf = 10;
+dt=5*1e-3; 
+t=0:dt:tf;
+
+rt = vrrotvec2mat(vrrotvec([0,0,1]',n1))
+
+visualizer=MBSVisualizer(SP,SV);
+plotPlane(n1',ones(1,3)*a(1)/2,1); hold on; %Bug in plotPlane? need to divide a
+% plotPlane(n1',zeros(1,3)*a(1),1); hold on;
+% plotPlane(n2',ones(1,3)*a(2),1); hold on;
+r1 = [0,1/sqrt(2),1/sqrt(2);-1/sqrt(2),1/sqrt(2),0;-1/sqrt(2),0,1/sqrt(2)];
+
+visualizer.update(SP,SV);
+
+p = 0.5;
+
+opts = optimoptions('quadprog','Algorithm','interior-point-convex','Display','off');
+% opts = optimoptions('quadprog','Algorithm','active-set','Display','off');
+H = [eye(6)*p,zeros(6,1);zeros(1,6),1]/2;
+f = zeros(length(H),1);
+for i=1:length(t)
+    SV = calc_pos(SP,SV);  
+    SV = calc_vel(SP,SV);
+    Je = calc_Je(SP,SV,SP.bN,SP.bP);
+    [pE,RE] = fk_e(SP,SV,SP.bN,SP.bP);	
+
+    Jet = n1'*Je(1:3,:);
+    e1 = n1'*pE - a(1);
+    
+
+    
+    
+    A = [Jet,1];
+    b = -e1;
+
+    x = quadprog(H,f,[],[],A,b,[],[],[],opts);
+    SV.dq = x(1:6);
+    
+    SV = int_rk4(SP,SV,dt,[0,0,0]');
+    visualizer.update(SP,SV);
+    
+end
+
+
+% 
+% % options = optimset('Algorithm','active-set');
+% [x,FVAL] = quadprog(H,f,A,b);
+% % [x,FVAL] =  quadprog(H,f,A,b,[],[],[],[],[],options);
+% 
+% area = [-2,10];
+% X1 = linspace(area(1),area(2));
+% X2 = linspace(area(1),area(2));
+% [X,Y] = meshgrid(X1,X2);
+% Z = sqrt(X.^2 + 4*(Y.^2 - 4).^2);
+% % Z = (X.^2 + 4*(Y.^2 - 4).^2);
+% contour(X,Y,Z,20); hold on;
+% 
+% grad = [2*x(1), 16*x(2) - 32;1,1;-1,2];
+% % for i = 1:length(grad)
+% %     grad(i,:) = grad(i,:)/norm(grad(i,:));
+% % end
+% for i = 1:length(grad)
+%     grad(i,:) = grad(i,:)/sqrt(norm(grad(i,:)));
+% end
+% % x11 = -X1 + 7;
+% % x12 = (X1 + 4)/2;
+% plot(X1,-X1 + 7)
+% plot(X1,(X1 + 4)/2)
+% 
+% for i = 1:length(grad)
+%     plot([x(1),x(1) + grad(i,1)],[x(2),x(2) + grad(i,2)])
+% end
+% 
+% legend('contour','c1: -x1 - x2 = -7','c2: x1 - 2x2 = -4','grad','grad c1','grad c2')
+% % quiver(x(1),x(2),grad(1,1), grad(1,2))
+% % quiver(x(1),x(2),grad(2,1), grad(2,2))
+% % quiver(x(1),x(2),grad(3,1), grad(3,2))
+% 
+% axis equal;
+% xlim(area);
+% ylim(area);
+
+
+

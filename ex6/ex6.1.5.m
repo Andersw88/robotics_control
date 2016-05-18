@@ -39,8 +39,9 @@ for j = 1:20
     end
 
     plot(tripod.t,d(:,1)); hold on;
-    plot(t,y(:,1)); hold on;
     legend('real','x');
+    plot(t,y(:,1)); hold on;
+    
 end
 
 
